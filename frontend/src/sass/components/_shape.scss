@@ -1,0 +1,29 @@
+.shape {
+    position: absolute;
+    top: 53%;
+    left: 40%;
+    font-size: xx-large;
+
+    &__option {
+        margin-left: 25%;
+        color: #00fff0;
+    }
+
+    &__word {
+        color: #ff8000;
+    }
+
+    &__button-send {
+        background-color: #d52974;
+        font-size: xx-large;
+        border: none;
+        width: 40%;
+        margin: 20% auto;
+        display: block;
+
+        &:hover {
+            background-color: #fa0eab;
+            cursor: pointer;
+        }
+    }
+}

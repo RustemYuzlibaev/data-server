@@ -1,7 +1,7 @@
-const http = require('http');
+const server = require('http').createServer(handler);
+const socketIOServer = require('socket.io')(server);
 const EventEmitter = require('events').EventEmitter;
-
-const io = require('socket.io-client');
+const socketIOClient = require('socket.io-client');
 const _ = require('lodash');
 
 const config = require('./config.js');
@@ -9,9 +9,12 @@ const fetchCoordinates = require('./asyncData.js');
 const getPostData = require('./getPostData.js');
 
 const dataEmitter = new EventEmitter();
-const socket = io(config.BUSTRONIC_URL); // socket instance
+
+// socket instance
+const socket = socketIOClient(config.BUSTRONIC_URL); // http://api.bustronic.ru
 
 let optionSettings = {};
+const parsedCoordinates = [];
 
 const optionHandler = function (data) {
     optionSettings = data;
@@ -20,7 +23,8 @@ const optionHandler = function (data) {
 // subscribe to option changes
 dataEmitter.on('onOptionChange', optionHandler);
 
-const server = http.createServer(async (req, res) => {
+// HTTP Server
+async function handler(req, res) {
     // getting options
     if (req.url === '/api/options') {
         const options = (await getPostData(req)) || {};
@@ -31,10 +35,18 @@ const server = http.createServer(async (req, res) => {
     }
 
     res.end();
-});
+}
 
 server.on('clientError', (err, socket) => {
     socket.end('HTTP/1.1 400 Bad Request\r\r\r\n');
+});
+
+server.listen(8000, '127.0.0.1', () =>
+    console.log(`Server is running on port 8000`),
+);
+
+socketIOServer.on('connection', (socket) => {
+    socket.emit('filteredData', JSON.stringify(parsedCoordinates));
 });
 
 socket.on('connect', () => {
@@ -45,18 +57,17 @@ socket.on('connect', () => {
             .then((data) => {
                 const vehicles = data.anims;
 
-                const parsedCoordinates = [];
-
                 vehicles.map((vehicle) => {
                     parsedCoordinates.push(
                         _.pick(vehicle, config.requiredKeys),
                     );
                 });
+                console.log(parsedCoordinates);
 
-                socket.emit('vehicles:data', parsedCoordinates);
+                socket.emit('vehicles:data', JSON.stringify(parsedCoordinates));
 
-                socket.on('message', (data) => {
-                    console.log('success:true', data);
+                socket.on('message', (backMessage) => {
+                    console.log('Information status:', backMessage);
                 });
             })
             .catch((err) => {
@@ -66,7 +77,3 @@ socket.on('connect', () => {
             });
     }, config.INTERVAL);
 });
-
-server.listen(8000, '127.0.0.1', () =>
-    console.log(`Server is running on port 8000`),
-);

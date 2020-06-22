@@ -1,0 +1,38 @@
+*,
+*::after,
+*::before {
+    margin: 0;
+    padding: 0;
+    box-sizing: inherit;
+}
+
+html {
+    height: 100%;
+}
+
+body {
+    background-color: #333;
+    box-sizing: border-box;
+    height: 100%;
+    color: #eee;
+    font-family: Helvetica, Arial, sans-serif;
+}
+
+ul {
+    list-style: none;
+}
+
+input::-webkit-calendar-picker-indicator,
+input::-webkit-inner-spin-button,
+input::-webkit-clear-button {
+    display: none;
+}
+
+/* Hide the browser's default checkbox */
+input[type='checkbox'] {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
